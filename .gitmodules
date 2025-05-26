@@ -1,0 +1,3 @@
+[submodule "veryl-jtag"]
+	path = veryl-jtag
+	url = git@github.com:onsdagens/veryl-jtag.git
