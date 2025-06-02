@@ -1,7 +1,8 @@
 [project]
 name = "hippo_programmer_vl"
 version = "0.1.0"
+[dependencies]
+veryl_jtag = {version = "0.1.0", path = "./veryl-jtag/"}
 [build]
-source = "src"
-target = {type = "directory", path = "target"}
 exclude_std = true
+sourcemap_target = {type = "none"} # skips outputting .sv.map files (don't know if they are needed)

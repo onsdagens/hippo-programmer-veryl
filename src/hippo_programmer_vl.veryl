@@ -1,0 +1,80 @@
+module Programmer (
+    rst_a: input  'a reset_async_low,
+    TCK  : input  'a clock          ,
+    TDO  : output 'a logic          ,
+    TDI  : input  'a logic          ,
+    TMS  : input  'a logic          ,
+
+    clk_i : input  'b clock             ,
+    rst_b : input  'b reset_async_low   ,
+    data_o: output 'b logic          <8>,
+    rdy_o : output 'b logic             ,
+) {
+    var jtag_sdr : 'a logic   ;
+    var jtag_sir : 'a logic   ;
+    var jtag_uir : 'a logic   ;
+    var jtag_cdr : 'a logic   ;
+    var jtag_udr : 'a logic   ;
+    var jtag_insn: 'a logic<4>;
+    var jtag_data: 'a logic<8>;
+    inst jtag: veryl_jtag::JtagTop (
+        rst : rst_a,
+        led0: _    ,
+        led1: _    ,
+        led2: _    ,
+        led3: _    ,
+        TCK        ,
+        TDO        ,
+        TDI        ,
+        TMS        ,
+
+        sdr_o: jtag_sdr,
+        sir_o: jtag_sir,
+        uir_o: jtag_uir,
+        cdr_o: jtag_cdr,
+        udr_o: jtag_udr,
+
+        instruction_o: jtag_insn,
+        data_sr_o    : jtag_data,
+    );
+    var jtag_data_reg: 'a logic<8>;
+    var written      : 'a logic   ;
+    always_ff (TCK, rst_a) {
+        if_reset {
+            jtag_data_reg = 0;
+            written       = 0;
+        } else {
+            if jtag_udr && (jtag_insn == 1) {
+                // inside the data register at this point we are capturing the
+                // shift register. should we just move it out?
+                written       = 1;
+                jtag_data_reg = jtag_data;
+            }
+            if written {
+                written = 0;
+            }
+        }
+    }
+
+    var xing_w   : 'b logic   ;
+    var xed_w    : 'b logic   ;
+    var xing_data: 'b logic<8>;
+    var xed_data : 'b logic<8>;
+    assign data_o    = xed_data;
+    assign rdy_o     = xed_w;
+    unsafe (cdc) {
+        always_ff (clk_i, rst_b) {
+            if_reset {
+                xing_w    = 0;
+                xed_w     = 0;
+                xing_data = 0;
+                xed_data  = 0;
+            } else {
+                xing_w    = written;
+                xed_w     = xing_w;
+                xing_data = jtag_data_reg;
+                xed_data  = xing_data;
+            }
+        }
+    }
+}
