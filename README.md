@@ -18,7 +18,7 @@ The toolchain used to transpile Veryl into Systemverilog is the standard [Veryl 
 Additionally, this project includes configuration for synthesis, place and route, and programming of the Numato Lab ECP-5 Mimas Mini development board. For these additional steps, we need the following tools:
 
 - [Yosys](https://github.com/YosysHQ/yosys?tab=readme-ov-file#building-from-source) for synthesis
-- [Slang] (https://github.com/MikePopoloski/slang) as a SystemVerilog frontend for Yosys
+- [Slang](https://github.com/MikePopoloski/slang) as a SystemVerilog frontend for Yosys
 - [NextPNR](https://github.com/YosysHQ/nextpnr?tab=readme-ov-file#getting-started) for place and route
 - [OpenOCD](https://openocd.org/pages/getting-openocd.html) for programming the device
 - [Project Trellis](https://github.com/YosysHQ/prjtrellis) for bitstream generation, and other device specifics.
