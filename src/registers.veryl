@@ -1,0 +1,99 @@
+module Registers (
+    rst_ni: input reset_async_low,
+
+    // JTAG signals
+    tck_i: input  clock,
+    tms_i: input  logic,
+    tdi_i: input  logic,
+    tdo_o: output logic,
+
+    // TAP controller interface
+    sir_i: input logic,
+    uir_i: input logic,
+    cdr_i: input logic,
+    sdr_i: input logic,
+    udr_i: input logic,
+
+    // Register interface
+    data_reg_o: output logic<8>,
+    instruction_o: output logic<4>,
+
+) {
+    // --- Intermediate signals
+    var outputs   : logic [16];
+    var idcode_out: logic     ;
+    var data_out  : logic     ;
+    // these should be connected to TDO of each
+    // data register
+    assign outputs[0]  = 0;
+    assign outputs[1]  = data_out;
+    assign outputs[2]  = 0;
+    assign outputs[3]  = 0;
+    assign outputs[4]  = 0;
+    assign outputs[5]  = 0;
+    assign outputs[6]  = idcode_out;
+    assign outputs[7]  = 0;
+    assign outputs[8]  = 0;
+    assign outputs[9]  = 0;
+    assign outputs[10] = 0;
+    assign outputs[11] = 0;
+    assign outputs[12] = 0;
+    assign outputs[13] = 0;
+    assign outputs[14] = 0;
+    assign outputs[15] = 0;
+    // --- Instruction reg
+    var ireg_insn: logic<4>;
+    inst insn_reg: jtag_registers::InstructionRegister (
+        rst_ni           ,
+        tdi_i            ,
+        tck_i            ,
+        tms_i            ,
+        sir_i            ,
+        uir_i            ,
+        insn_o: ireg_insn,
+    );
+    assign instruction_o = ireg_insn;
+    assign tdo_o = outputs[ireg_insn];
+    // --- IDCODE STANDARD REG
+    inst idcode_reg: jtag_registers::DataRegister::<32> #(
+        InitialValue: 'hDEADBEEF, // give our module ID 0xDEADBEEF
+        Addr        : 'b0110    , // standard IDCODE address
+    ) (
+        bit_out: idcode_out,
+        tck_i              ,
+        rst_ni             ,
+
+        cdr_i                      ,
+        sdr_i                      ,
+        tdi_i                      ,
+        udr_i                      ,
+        tms_i                      ,
+        instruction_i   : ireg_insn,
+        register_o      : _        ,
+        shift_register_o: _        ,
+    );
+    // ---
+
+    // --- CUSTOM DATA REG
+    // here we can technically up the throughput by capturing TDO directly,
+    // but i don't really care for the extra edge case for some ~10% extra
+    // on an already Mbit+ line when we are sending <100kB.
+    inst data_reg: jtag_registers::DataRegister::<8> #(
+        Writeable: true  ,
+        Addr     : 'b0001,
+    ) (
+        bit_out: data_out,
+        tck_i            ,
+        rst_ni           ,
+
+        cdr_i                   ,
+        sdr_i                   ,
+        tdi_i                   ,
+        udr_i                   ,
+        tms_i                   ,
+        instruction_i: ireg_insn,
+
+        register_o      : data_reg_o         ,
+        shift_register_o: _,
+    );
+}

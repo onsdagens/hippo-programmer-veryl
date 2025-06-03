@@ -1,61 +1,71 @@
 module Programmer (
-    rst_a: input  'a reset_async_low,
-    TCK  : input  'a clock          ,
-    TDO  : output 'a logic          ,
-    TDI  : input  'a logic          ,
-    TMS  : input  'a logic          ,
+    rst_a_ni: input  'a reset_async_low,
+    tck_i  : input  'a clock          ,
+    tdo_o  : output 'a logic          ,
+    tdi_i  : input  'a logic          ,
+    tms_i  : input  'a logic          ,
 
     clk_i : input  'b clock             ,
-    rst_b : input  'b reset_async_low   ,
+    rst_b_ni : input  'b reset_async_low   ,
     data_o: output 'b logic          <8>,
     rdy_o : output 'b logic             ,
 ) {
-    var jtag_sdr : 'a logic   ;
-    var jtag_sir : 'a logic   ;
-    var jtag_uir : 'a logic   ;
-    var jtag_cdr : 'a logic   ;
-    var jtag_udr : 'a logic   ;
-    var jtag_insn: 'a logic<4>;
-    var jtag_data: 'a logic<8>;
-    inst jtag: veryl_jtag::JtagTop (
-        rst : rst_a,
-        led0: _    ,
-        led1: _    ,
-        led2: _    ,
-        led3: _    ,
-        TCK        ,
-        TDO        ,
-        TDI        ,
-        TMS        ,
 
-        sdr_o: jtag_sdr,
-        sir_o: jtag_sir,
-        uir_o: jtag_uir,
-        cdr_o: jtag_cdr,
-        udr_o: jtag_udr,
-
-        instruction_o: jtag_insn,
-        data_sr_o    : jtag_data,
+    // --- TAP Controller
+    var tap_sdr: 'a logic;
+    var tap_sir: 'a logic;
+    var tap_uir: 'a logic;
+    var tap_cdr: 'a logic;
+    var tap_udr: 'a logic;
+    inst tap_ctl: tap_controller::TAPController (
+        rst: rst_a_ni,
+        TCK: tck_i,
+        TMS: tms_i,
+        SDR: tap_sdr,
+        SIR: tap_sir,
+        UIR: tap_uir,
+        CDR: tap_cdr,
+        UDR: tap_udr,
+        state: _, 
     );
-    var jtag_data_reg: 'a logic<8>;
+    // ---
+    // --- Data + Intruction Registers
+    var reg_insn: 'a logic<4>;
+    var reg_data: 'a logic<4>;
+    inst regs: Registers (
+        rst_ni : rst_a_ni,
+        tck_i        ,
+        tdo_o        ,
+        tdi_i        ,
+        tms_i        ,
+
+        sir_i: tap_sir,
+        uir_i: tap_uir,
+        cdr_i: tap_cdr,
+        sdr_i: tap_sdr,
+        udr_i: tap_udr,
+
+        instruction_o: reg_insn,
+        data_reg_o   : reg_data,
+    );
+    // ---
+    // --- State keeping machinery
     var written      : 'a logic   ;
-    always_ff (TCK, rst_a) {
-        if_reset {
-            jtag_data_reg = 0;
+    always_ff (tck_i, rst_a_ni) {
+        if_reset { 
             written       = 0;
         } else {
-            if jtag_udr && (jtag_insn == 1) {
-                // inside the data register at this point we are capturing the
-                // shift register. should we just move it out?
+            if tap_udr && (reg_insn == 1) {
                 written       = 1;
-                jtag_data_reg = jtag_data;
             }
             if written {
                 written = 0;
             }
         }
     }
+    // ---
 
+    // --- Clock Domain Crossing
     var xing_w   : 'b logic   ;
     var xed_w    : 'b logic   ;
     var xing_data: 'b logic<8>;
@@ -63,7 +73,7 @@ module Programmer (
     assign data_o    = xed_data;
     assign rdy_o     = xed_w;
     unsafe (cdc) {
-        always_ff (clk_i, rst_b) {
+        always_ff (clk_i, rst_b_ni) {
             if_reset {
                 xing_w    = 0;
                 xed_w     = 0;
@@ -72,9 +82,10 @@ module Programmer (
             } else {
                 xing_w    = written;
                 xed_w     = xing_w;
-                xing_data = jtag_data_reg;
+                xing_data = reg_data;
                 xed_data  = xing_data;
             }
         }
     }
+    // ---
 }

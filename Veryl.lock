@@ -3,23 +3,47 @@
 version = 1
 
 [[projects]]
-name = "veryl_jtag"
-source = "./veryl-jtag/"
+name = "jtag_registers"
+
+[projects.source]
+uuid = "ba4472cd-1a86-5f4f-bbe1-81072957fc51"
+url = "https://github.com/onsdagens/jtag-registers-veryl"
+path = ""
+project = "jtag_registers"
+version = "0.1.0"
+revision = "1acdc7f55b4bf3186951c75850b1062944ba1995"
 
 [[projects.dependencies]]
 name = "tap_controller"
-source = "./veryl-jtag/tap-controller/"
 
-[[projects.dependencies]]
-name = "jtag_vr"
-source = "./veryl-jtag/jtag-vr/"
-
-[[projects]]
-name = "jtag_vr"
-source = "./veryl-jtag/jtag-vr/"
-dependencies = []
+[projects.dependencies.source]
+uuid = "1abec0f2-374d-5218-a8f6-71a447667771"
+url = "https://github.com/onsdagens/tap-controller-veryl.git"
+path = ""
+project = "tap_controller"
+version = "0.1.0"
+revision = "e2d6aa775927f4c09d3cd264ad9e521be11764dd"
 
 [[projects]]
 name = "tap_controller"
-source = "./veryl-jtag/tap-controller/"
 dependencies = []
+
+[projects.source]
+uuid = "0e49937b-63f6-5b96-af9e-274763999a8e"
+url = "https://github.com/onsdagens/tap-controller-veryl"
+path = ""
+project = "tap_controller"
+version = "0.1.0"
+revision = "e2d6aa775927f4c09d3cd264ad9e521be11764dd"
+
+[[projects]]
+name = "tap_controller_0"
+dependencies = []
+
+[projects.source]
+uuid = "1abec0f2-374d-5218-a8f6-71a447667771"
+url = "https://github.com/onsdagens/tap-controller-veryl.git"
+path = ""
+project = "tap_controller"
+version = "0.1.0"
+revision = "e2d6aa775927f4c09d3cd264ad9e521be11764dd"

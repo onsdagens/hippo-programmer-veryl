@@ -2,7 +2,8 @@
 name = "hippo_programmer_vl"
 version = "0.1.0"
 [dependencies]
-veryl_jtag = {version = "0.1.0", path = "./veryl-jtag/"}
+tap_controller = { version = "0.1.0", github = "onsdagens/tap-controller-veryl" }
+jtag_registers = { version = "0.1.0", github = "onsdagens/jtag-registers-veryl" }
 [build]
 exclude_std = true
-sourcemap_target = {type = "none"} # skips outputting .sv.map files (don't know if they are needed)
+sourcemap_target = { type = "none" } # skips outputting .sv.map files (don't know if they are needed)

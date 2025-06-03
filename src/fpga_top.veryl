@@ -1,9 +1,9 @@
 module fpga_top (
-    rst: input  'a reset_async_low,
-    TCK: input  'a clock          ,
-    TDO: output 'a logic          ,
-    TDI: input  'a logic          ,
-    TMS: input  'a logic          ,
+    rst_ni: input  'a reset_async_low,
+    tck_i: input  'a clock          ,
+    tdo_o: output 'a logic          ,
+    tdi_i: input  'a logic          ,
+    tms_i: input  'a logic          ,
 
     // interface
     led0: output 'b logic,
@@ -21,18 +21,18 @@ module fpga_top (
     var rst_b: 'b reset_async_low;
     // i think this is completely safe since the reset is async...
     unsafe (cdc) {
-        assign rst_b = rst;
+        assign rst_b = rst_ni;
     }
     var prog_data: 'b logic<8>;
     var prog_rdy : 'b logic   ;
     inst prog: Programmer (
-        rst_a : rst      ,
-        TCK              ,
-        TDO              ,
-        TDI              ,
-        TMS              ,
+        rst_a_ni : rst_ni      ,
+        tck_i              ,
+        tdo_o             ,
+        tdi_i             ,
+        tms_i             ,
         clk_i : clk      ,
-        rst_b            ,
+        rst_b_ni: rst_b            ,
         data_o: prog_data,
         rdy_o : prog_rdy ,
     );
@@ -71,7 +71,7 @@ module fpga_top (
             // if programmer has a byte for us and we haven't read it
             if prog_rdy && !read {
                 // set the current memory byte to the received byte
-                memory[idx] = prog_data;
+                memory[(idx >> 1) as 4] = prog_data;
                 // but only once
                 read = 1;
             } else if (!prog_rdy && read) {
