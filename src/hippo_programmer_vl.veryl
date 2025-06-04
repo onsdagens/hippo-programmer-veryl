@@ -1,14 +1,14 @@
 module Programmer (
     rst_a_ni: input  'a reset_async_low,
-    tck_i  : input  'a clock          ,
-    tdo_o  : output 'a logic          ,
-    tdi_i  : input  'a logic          ,
-    tms_i  : input  'a logic          ,
+    tck_i   : input  'a clock          ,
+    tdo_o   : output 'a logic          ,
+    tdi_i   : input  'a logic          ,
+    tms_i   : input  'a logic          ,
 
-    clk_i : input  'b clock             ,
-    rst_b_ni : input  'b reset_async_low   ,
-    data_o: output 'b logic          <8>,
-    rdy_o : output 'b logic             ,
+    clk_i   : input  'b clock             ,
+    rst_b_ni: input  'b reset_async_low   ,
+    data_o  : output 'b logic          <8>,
+    rdy_o   : output 'b logic             ,
 ) {
 
     // --- TAP Controller
@@ -18,26 +18,26 @@ module Programmer (
     var tap_cdr: 'a logic;
     var tap_udr: 'a logic;
     inst tap_ctl: tap_controller::TAPController (
-        rst: rst_a_ni,
-        TCK: tck_i,
-        TMS: tms_i,
-        SDR: tap_sdr,
-        SIR: tap_sir,
-        UIR: tap_uir,
-        CDR: tap_cdr,
-        UDR: tap_udr,
-        state: _, 
+        rst  : rst_a_ni,
+        TCK  : tck_i   ,
+        TMS  : tms_i   ,
+        SDR  : tap_sdr ,
+        SIR  : tap_sir ,
+        UIR  : tap_uir ,
+        CDR  : tap_cdr ,
+        UDR  : tap_udr ,
+        state: _       ,
     );
     // ---
     // --- Data + Intruction Registers
     var reg_insn: 'a logic<4>;
-    var reg_data: 'a logic<4>;
+    var reg_data: 'a logic<8>;
     inst regs: Registers (
-        rst_ni : rst_a_ni,
-        tck_i        ,
-        tdo_o        ,
-        tdi_i        ,
-        tms_i        ,
+        rst_ni: rst_a_ni,
+        tck_i           ,
+        tdo_o           ,
+        tdi_i           ,
+        tms_i           ,
 
         sir_i: tap_sir,
         uir_i: tap_uir,
@@ -47,16 +47,23 @@ module Programmer (
 
         instruction_o: reg_insn,
         data_reg_o   : reg_data,
+
     );
     // ---
     // --- State keeping machinery
-    var written      : 'a logic   ;
+    // i think i broke something here
+
+    var written  : 'a logic   ;
+    // is this 1 even needed really?
+    var jtag_data: 'a logic<8>;
     always_ff (tck_i, rst_a_ni) {
-        if_reset { 
-            written       = 0;
+        if_reset {
+            jtag_data = 0;
+            written   = 0;
         } else {
             if tap_udr && (reg_insn == 1) {
-                written       = 1;
+                jtag_data = reg_data;
+                written   = 1;
             }
             if written {
                 written = 0;
@@ -82,7 +89,7 @@ module Programmer (
             } else {
                 xing_w    = written;
                 xed_w     = xing_w;
-                xing_data = reg_data;
+                xing_data = jtag_data;
                 xed_data  = xing_data;
             }
         }

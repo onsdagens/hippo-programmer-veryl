@@ -6,12 +6,12 @@ version = 1
 name = "jtag_registers"
 
 [projects.source]
-uuid = "ba4472cd-1a86-5f4f-bbe1-81072957fc51"
+uuid = "128925ca-10f1-544f-a0f2-eef836762e6b"
 url = "https://github.com/onsdagens/jtag-registers-veryl"
 path = ""
 project = "jtag_registers"
-version = "0.1.0"
-revision = "1acdc7f55b4bf3186951c75850b1062944ba1995"
+version = "0.1.1"
+revision = "234a0f6a2b4c2a830395860795e99ad7841cb50b"
 
 [[projects.dependencies]]
 name = "tap_controller"
